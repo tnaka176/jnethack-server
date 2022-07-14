@@ -1,0 +1,95 @@
+diff -Naru NetHack-NetHack-3.6.6_Released.orig/src/cmd.c NetHack-NetHack-3.6.6_Released/src/cmd.c
+--- NetHack-NetHack-3.6.6_Released.orig/src/cmd.c	2022-06-01 01:08:40.782756092 +0000
++++ NetHack-NetHack-3.6.6_Released/src/cmd.c	2022-06-01 04:17:42.574048200 +0000
+@@ -822,53 +822,6 @@
+ int
+ enter_explore_mode(VOID_ARGS)
+ {
+-    if (wizard) {
+-/*JP
+-        You("are in debug mode.");
+-*/
+-        You("すでにデバッグモードだ．");
+-    } else if (discover) {
+-/*JP
+-        You("are already in explore mode.");
+-*/
+-        You("すでに探検モードだ．");
+-    } else {
+-#ifdef SYSCF
+-#if defined(UNIX)
+-        if (!sysopt.explorers || !sysopt.explorers[0]
+-            || !check_user_string(sysopt.explorers)) {
+-/*JP
+-            You("cannot access explore mode.");
+-*/
+-            You("探検モードにアクセスできない．");
+-            return 0;
+-        }
+-#endif
+-#endif
+-        pline(
+-/*JP
+-        "Beware!  From explore mode there will be no return to normal game.");
+-*/
+-        "警告！発見モードに入ったら通常モードには戻れない．");
+-        if (paranoid_query(ParanoidQuit,
+-/*JP
+-                           "Do you want to enter explore mode?")) {
+-*/
+-                           "発見モードに移りますか？")) {
+-            clear_nhwindow(WIN_MESSAGE);
+-/*JP
+-            You("are now in non-scoring explore mode.");
+-*/
+-            You("スコアがのらない発見モードに移行した．");
+-            discover = TRUE;
+-        } else {
+-            clear_nhwindow(WIN_MESSAGE);
+-/*JP
+-            pline("Resuming normal game.");
+-*/
+-            pline("通常モードを続ける．");
+-        }
+-    }
+     return 0;
+ }
+ 
+diff -Naru NetHack-NetHack-3.6.6_Released.orig/sys/unix/hints/linux NetHack-NetHack-3.6.6_Released/sys/unix/hints/linux
+--- NetHack-NetHack-3.6.6_Released.orig/sys/unix/hints/linux	2020-03-08 17:29:31.000000000 +0000
++++ NetHack-NetHack-3.6.6_Released/sys/unix/hints/linux	2022-06-01 04:30:09.693341211 +0000
+@@ -9,12 +9,12 @@
+ # for Ubuntu dapper.
+ 
+ 
+-#PREFIX=/usr
+-PREFIX=$(wildcard ~)/nh/install
+-HACKDIR=$(PREFIX)/games/lib/$(GAME)dir
+-SHELLDIR = $(PREFIX)/games
++PREFIX=/
++#PREFIX=$(wildcard ~)/nh/install
++HACKDIR=/nh366
++#SHELLDIR = $(PREFIX)/games
+ INSTDIR=$(HACKDIR)
+-VARDIR = $(HACKDIR)
++VARDIR = $(HACKDIR)/var
+ 
+ 
+ 
+@@ -34,6 +34,7 @@
+ #CFLAGS+=-DSCORE_ON_BOTL
+ #CFLAGS+=-DMSGHANDLER
+ #CFLAGS+=-DTTY_TILES_ESCCODES
++CFLAGS+=-DVAR_PLAYGROUND=\"$(VARDIR)\"
+ 
+ LINK=$(CC)
+ # Only needed for GLIBC stack trace:
+@@ -47,7 +48,7 @@
+ #WINSRC += tile.c
+ #WINOBJ += tile.o
+ 
+-WINTTYLIB=-lncurses -ltinfo
++WINTTYLIB=-lncursesw -ltinfo
+ 
+ CHOWN=true
+ CHGRP=true
