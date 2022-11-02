@@ -1,24 +1,33 @@
-#!/bin/sh
+#!/bin/bash
 # vim: set tabstop=2 expandtab softtabstop=2 shiftwidth=2 autoindent :
 
 set -e
 
-if [ "$1" = 'xinetd' ]; then
+if [ "$1" == 'jnethack' ]; then
 
-  if [ ! -e /home/nethack/dgldir/dgamelaunch.db ]; then
-    echo "Copying /home/nethack/dgldir."
-    cp -a /home/nethack/dgldir.orig/* /home/nethack/dgldir/
+  # initialize nethack data
+  if [ ! -e /nh366/var/perm ]; then
+    echo "Copying /nh366/var."
+    cp -a /nh366/var.orig/* /nh366/var/
+  fi
+  chown -R games:games /nh366/var
+  chmod -R o-rwx /nh366/var
+
+  # if TERM=dumb, force set vt100
+  if [ -z $TERM ] || [ $TERM == "dumb" ]; then
+    export TERM=vt100
   fi
 
-  if [ ! -e /home/nethack/nh366/var/perm ]; then
-    echo "Copying /home/nethack/nh366/var."
-    cp -a /home/nethack/nh366/var.orig/* /home/nethack/nh366/var/
+  # credential disable
+  if [ ${GOTTY_CREDENTIAL} == "disabled" ]; then
+    export -n GOTTY_CREDENTIAL
   fi
 
-  chown -R games:games /home/nethack/dgldir /home/nethack/nh366/var
-  chmod -R o-rwx /home/nethack/dgldir /home/nethack/nh366/var
+  # set PATH
+  PATH="$PATH:/nh366"
 
-  echo "Starting $@"
+  /usr/local/bin/gotty $1
+
 fi
 
 exec "$@"

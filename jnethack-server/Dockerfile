@@ -18,7 +18,8 @@ WORKDIR /tmp
 COPY ./patch/jnethack_server.patch /tmp/
 
 RUN apt-get update \
- && apt-get install -y \
+ && apt-get install -y --no-install-recommends \
+	ca-certificates \
 	build-essential \
 	bison \
 	flex \
@@ -33,51 +34,33 @@ RUN apt-get update \
  && cd nethack-src \
  && curl -sL ${JNETHACK_URL} | zcat - | patch -p1 \
  && cat ../jnethack_server.patch | patch -p1 \
- && find . -type f | xargs -i nkf -e -Lu --overwrite {} \
- && cd sys/unix \
- && sh setup.sh hints/linux \
- && cd ../../ \
+ && sh ./configure \
  && make all \
  && make install
 
 
 #------------------------------------------------------------------------------
-# dgamelaunch-build
+# gotty-build
 #------------------------------------------------------------------------------
-FROM debian:bullseye AS dgamelaunch-build
+FROM debian:bullseye AS gotty-build
 
 ARG HTTP_PROXY
 
 ENV http_proxy=${HTTP_PROXY}
 ENV https_proxy=${HTTP_PROXY}
 ENV DEBIAN_FRONTEND=noninteractive
-ENV DGAMELAUNCH_URL=https://github.com/paxed/dgamelaunch.git
+ENV GOPATH /tmp/go
 
 WORKDIR /tmp
 
-COPY ./patch/dgamelaunch_343-366.patch /tmp/
-
 RUN apt-get update \
- && apt-get install -y \
-	build-essential \
-	autoconf \
-	bison \
-	flex \
+ && apt-get install -y --no-install-recommends \
+	ca-certificates \
+	golang \
 	git \
-	libncurses5-dev \
-	libsqlite3-dev \
-	sqlite3 \
- && git clone ${DGAMELAUNCH_URL} \
- && cd dgamelaunch \
- && cat ../dgamelaunch_343-366.patch | patch -p1 \
- && ./autogen.sh \
-	--enable-sqlite \
-	--enable-shmem \
-	--with-config-file=/home/nethack/etc/dgamelaunch.conf \
- && make \
- && ./dgl-create-chroot \
- && rm -fr /home/nethack/nh366/ \
- && cp /lib/x86_64-linux-gnu/libncursesw.so.6 /home/nethack/lib/x86_64-linux-gnu/
+ && mkdir go \
+ && cd go \
+ && go get github.com/yudai/gotty
 
 
 #------------------------------------------------------------------------------
@@ -87,29 +70,25 @@ FROM debian:bullseye-slim
 
 ARG HTTP_PROXY
 
-COPY --from=dgamelaunch-build /home/nethack/ /home/nethack/
-COPY --from=nethack-build     /nh366/        /home/nethack/nh366/
-COPY ./xinetd-dgl     /etc/xinetd.d/dgl
+COPY --from=gotty-build   /tmp/go/bin/gotty /usr/local/bin/
+COPY --from=nethack-build /nh366/           /nh366/
 COPY ./entrypoint.sh  /
 
 RUN export http_proxy=${HTTP_PROXY} \
  && export DEBIAN_FRONTEND=noninteractive \
  && apt-get update \
- && apt-get install -y \
-	flex \
-	xinetd \
-	telnetd \
+ && apt-get install -y --no-install-recommends \
+	libncursesw6 \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
- && chown -R games:games /home/nethack/nh366/ \
- && mv /home/nethack/dgldir    /home/nethack/dgldir.orig \
- && mv /home/nethack/nh366/var /home/nethack/nh366/var.orig
+ && chown -R games:games /nh366/ \
+ && mv /nh366/var /nh366/var.orig
 
-WORKDIR /home/nethack
+WORKDIR /nh366
 
-EXPOSE 23
+EXPOSE 8080
 
-VOLUME ["/home/nethack/dgldir", "/home/nethack/nh366/var"]
+VOLUME ["/nh366/var"]
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["xinetd", "-dontfork"]
+CMD ["jnethack"]

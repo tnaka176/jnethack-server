@@ -13,17 +13,19 @@ services:
     restart: unless-stopped
     image: jnethack-server
     ports:
-      - "${JNETHACK_EXTERNAL_PORT}:23"
+      - "${JNETHACK_EXTERNAL_PORT}:8080"
+    environment:
+      - TZ=${TZ}
+      - NETHACKOPTIONS=${NETHACKOPTIONS}
+      - GOTTY_CREDENTIAL=${GOTTY_CREDENTIAL}
+      - GOTTY_TITLE_FORMAT=${GOTTY_TITLE_FORMAT}
+      - GOTTY_PERMIT_WRITE=${GOTTY_PERMIT_WRITE}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - dgldir:/home/nethack/dgldir:rw
-      - nhdata:/home/nethack/nh366/var:rw
+      - nhdata:/nh366/var:rw
     networks:
       - jnethack-server
 
 volumes:
-  dgldir:
-      driver: local
   nhdata:
       driver: local
 
