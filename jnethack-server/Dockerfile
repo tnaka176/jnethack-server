@@ -11,7 +11,7 @@ ENV http_proxy=${HTTP_PROXY}
 ENV https_proxy=${HTTP_PROXY}
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NETHACK_URL=https://www.nethack.org/download/3.6.6/nethack-366-src.tgz
-ENV JNETHACK_URL=https://ja.osdn.net/dl/jnethack/jnethack-3.6.6-0.5.diff.gz
+ENV JNETHACK_URL=https://ja.osdn.net/dl/jnethack/jnethack-3.6.6-0.6.diff.gz
 
 WORKDIR /tmp
 
