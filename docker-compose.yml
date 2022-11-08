@@ -11,7 +11,7 @@ services:
       container_group: jnethack
     mem_limit: 64m
     restart: unless-stopped
-    image: jnethack-server
+    image: jnethack-server:3.6.6-0.6
     ports:
       - "${JNETHACK_EXTERNAL_PORT}:8080"
     environment:
